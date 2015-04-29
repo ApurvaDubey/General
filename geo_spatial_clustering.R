@@ -1,4 +1,3 @@
-
 # About: this code performs geo-spatial clustering
 # this is like KMC, but on geo-spatial data
 
@@ -9,7 +8,7 @@ library(sqldf)
 
 # read inputs
 input <- airports <- read.csv("http://sourceforge.net/p/openflights/code/HEAD/tree/openflights/data/airports.dat?format=raw", header = FALSE)
-colnames(airports) <- c("AIRPORT_ID","NAME","CITY","CNTRY","IATA","ICAO","LAT","LONG","ALT","TZ","DST","TZDBT")
+colnames(input) <- c("AIRPORT_ID","NAME","CITY","CNTRY","IATA","ICAO","LAT","LONG","ALT","TZ","DST","TZDBT")
 
 # subset to data corresponding to India
 data <- input[which(input$CNTRY=='India'),]
@@ -46,7 +45,7 @@ plot(mapPoints)
 for (i in 1:clusteramounts) {
   
   if(x[i,]$flag==1) {
-    A = earth.poly(points.to.group[which(points.to.group$group==i),c("LONG","LAT")]) 
+    A = earth.poly(data[which(data$cluster==i),c("LONG","LAT")]) 
     x[i,]$Area = A$area
     x[i,]$Radius = (A$area/pi)
   }
@@ -75,7 +74,7 @@ for (i in 1:nrow(data)) {
       idx = idx + 1
       p1=c(as.numeric(data[i,]$LONG),as.numeric(data[i,]$LAT))
       p2=c(as.numeric(data[j,]$LONG),as.numeric(data[j,]$LAT))
-      d = distHaversine(p1,p2,r=6378137)
+      d = distHaversine(p1,p2,r=6378137)a
       #print(c(p1,p2,d))
       #print (c(data[i,]$CITY,data[j,]$CITY,d))
       df$CITY1[idx]=data[i,]$CITY
@@ -87,4 +86,3 @@ for (i in 1:nrow(data)) {
 }
 
 write.csv(df, file = "pairwise_dist.txt",row.names=FALSE)
-

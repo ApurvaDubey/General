@@ -1,0 +1,130 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import timeit
+start_time = timeit.default_timer()
+
+# About the code:
+    # this code solves the N-queen problem using BackTrack Search paradigm
+
+N=9 # Number of queens
+rng=range(0,N)
+
+# define decision variables
+row_of_column=[-1 for x in rng]
+
+# define chessboard
+# chess board is not needed in BackTrack Search
+# However, we will need when we do Forward Checking
+chess_board={(x,y):0 for x in rng for y in rng}
+
+def chess_board_reset(chess_board,column):
+    for cols in range(column,N):
+        for rows in rng:
+            chess_board[cols,rows]=0
+
+def decision_var_reset(row_of_column,column):
+    for cols in range(column,N):
+        row_of_column[cols]=-1
+
+# print number of open postions 
+def open_positions():
+    return "Number of open positions is:", N*N-sum(chess_board.values())
+
+# propogate constraints
+def constraint_propogation_FC(q):
+        
+    for i in rng:
+        chess_board[q,i]=1 # column is occupied
+
+        if row_of_column[q] in rng:
+            chess_board[i,row_of_column[q]]=1 # row is occupied
+        
+        if (q+i in rng) and (row_of_column[q]+i in rng):
+            chess_board[q+i,row_of_column[q]+i]=1 # upper right diagonal is occupied
+            
+        if (q+i in rng) and (row_of_column[q]-i in rng):
+            chess_board[q+i,row_of_column[q]-i]=1 # lower right diagonal is occupied
+            
+        if (q-i in rng) and (row_of_column[q]-i in rng):
+            chess_board[q-i,row_of_column[q]-i]=1 # lower left diagonal is occupied
+            
+        if (q-i in rng) and (row_of_column[q]+i in rng):
+            chess_board[q-i,row_of_column[q]+i]=1 # upper left diagonal is occupied
+            
+
+def constraint_check_FC(row_of_column,n):
+    flag=True
+    for i in range(0,n):
+        # check that queens are not attacking diagoally [(slope)==1]
+        # and are not on the same row [(slope)==0]
+        for j in (0,n):
+            if i != j:
+                slope = abs(float(row_of_column[j] - row_of_column[i])/float(j-i))
+                if ((slope == 1) or (slope == 0)): flag=False
+
+    return flag
+
+def queen_placement_FC(validValue,validList,n):
+    flag = False
+    # print lowerBound,N, validList,n
+    # scan the entire column; place queen in the first available row
+
+    # taking the intersection of validList and range of possible values so prune the search
+    for i in [val for val in range(validValue,N) if val in validList]: 
+        if chess_board[n,i]==0:
+            row_of_column[n]=i
+            flag = True
+            #print "placing queen# ", n," on row# ", i," {",validValue,validList,"}"
+            break
+            
+    return flag
+
+def range_queen_placement(n):
+    L=[]
+
+    for i in rng:
+        if chess_board[n,i]==0:
+            L.append(i)
+                        
+    return L
+
+def queen_FC(n,row_of_column):
+
+    if n==N:       
+        print row_of_column,constraint_check_FC(row_of_column,N-1) # "reached end"
+        return 
+
+    # for FC, the rng will be a custom rng
+    validList = range_queen_placement(n)
+
+    # print(n,validList)
+    for validValue in validList:
+
+        # place the n-th queen
+        flag_plc=queen_placement_FC(validValue,validList,n) 
+
+        # propogate constraints after queen placement   
+        constraint_propogation_FC(n)
+        
+        if flag_plc==True: # if placement of queen is successful          
+            flag_cons=constraint_check_FC(row_of_column,n) # check constraints
+
+            if flag_cons==True: # if constraint is staisfied then move to next queen
+                queen_FC(n+1,row_of_column)
+            else: # if constraint is violated then move to next position of same queen
+                pass
+            
+        else: # move to next position of same queen
+            pass
+
+        # reset chess_board starting 'n' and decision variable starting column 'n'
+        chess_board_reset(chess_board,n)
+        decision_var_reset(row_of_column,n)
+
+# call the main function to initiate solver      
+queen_FC(0,row_of_column)
+
+# end time
+elapsed = timeit.default_timer() - start_time
+print (elapsed)

@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# About the code:
+    # this code solves the N-queen problem using BackTrack Search paradigm
+
+N=8 # Number of queens
+rng=range(0,N)
+
+# define decision variables
+row_of_column=[-1 for x in rng]
+
+# define chessboard
+# chess board is not needed in BackTrack Search
+# However, we will need when we do Forward Checking
+chess_board={(x,y):0 for x in rng for y in rng}
+
+def constraint_check_BT(row_of_column,n):
+    flag=True
+    for i in range(0,n):
+        # check that queens are not attacking diagoally [(slope)==1]
+        # and are not on the same row [(slope)==0]
+        for j in (0,n):
+            if i != j:
+                slope = abs(float(row_of_column[j] - row_of_column[i])/float(j-i))
+                if ((slope == 1) or (slope == 0)): flag=False
+
+    return flag
+
+def queen_placement_BT(lowerBound,n):
+    flag = False
+
+    # scan the entire column; place queen in the first available row
+    for i in range(lowerBound,N): 
+        if chess_board[n,i]==0:
+            row_of_column[n]=i
+            flag = True
+            break
+            
+    return flag
+
+def queen_BT(n,row_of_column):
+
+    if n==N:       
+        print row_of_column,constraint_check_BT(row_of_column,N-1) # "reached end"
+        return 
+
+    for lowerBound in rng:
+        flag_plc=queen_placement_BT(lowerBound,n) # place the n-th queen
+
+        if flag_plc==True: # if placement of queen is successful          
+            flag_cons=constraint_check_BT(row_of_column,n) # check constraints
+
+            if flag_cons==True: # if constraint is staisfied then move to next queen
+                queen_BT(n+1,row_of_column)
+            else: # if constraint is violated then move to next position of same queen
+                pass
+            
+        else: # move to next position of same queen
+            pass
+        
+queen_BT(0,row_of_column)
+
+

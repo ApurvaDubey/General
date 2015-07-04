@@ -1,0 +1,10 @@
+fit = train(medv~., data=Boston, method = "earth", 
+            trControl = fitControl,
+            tuneGrid = expand.grid(degree = c(1:10),nprune = c(10:20)),
+            metric="Rsquared")
+
+
+fit
+summary(fit)
+
+# http://www.milbo.org/doc/earth-notes.pdf

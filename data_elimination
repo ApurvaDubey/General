@@ -1,0 +1,22 @@
+# keeping only numeric fields
+numVars <- sapply(data, is.numeric) 
+numData <- data[, numVars]
+dim(numData)
+
+#separating character fields, along with 
+charData <- data[,!numVars]
+charData = data.frame(charData)
+dim(charData)
+
+# eliminating variables with near zero variance
+nzv <- nearZeroVar(numData, saveMetrics = TRUE)
+nzv = nearZeroVar(numData)
+filteredData <- numData[,-nzv]
+dim(filteredData)
+
+# finding correlation and eliminating redundant variables
+dataCor <- cor(filteredData)
+dim(dataCor)
+highlyCorData <- findCorrelation(dataCor, cutoff = 0.8)
+data02 <- filteredData[, -highlyCorData]
+dim(data02)

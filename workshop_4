@@ -1,0 +1,29 @@
+% Parameters
+int: n; 
+int: n_half = n div 2;
+int: n_quat = n div 4;
+
+array[1..n,1..n] of bool: friend;
+
+% Variables
+array[1..n] of var 1..n: x; %person at position
+array[1..n_quat] of var 0..1: z; %to apply symmetry breaking constraint
+
+% Constraints
+include "alldifferent.mzn";
+constraint alldifferent(x);
+
+constraint sum([z[i]==1 | i in 1..n_quat] ) = 1; % symmetry breaking constraint
+
+% Objective function
+var int: obj = 
+sum([ friend[x[j],x[j+1]] + friend[x[j],x[j+n_half]] | j in 1..n_half-1 ] )  + 
+sum([ friend[x[m],x[m+1]] | m in n_half+1..n-1 ] ) +
+friend[x[n_half],x[n]] 
+;
+
+solve maximize obj;
+
+output ["Objective = ", show(obj),
+"\n Top Row Placement =    ", show([x[i] | i in 1..n_half]),
+"\n Bottom Row Placement = ", show([x[i] | i in n_half+1..n])];

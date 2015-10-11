@@ -1,0 +1,17 @@
+library(ggmap)
+library(maptools)
+library(rgdal)
+
+shapefile <- readShapeSpatial('VNM_adm1.shp') 
+
+plot(shapefile)
+
+data <- fortify(shapefile)
+
+nc <- get_map("Vietnam", zoom = 6, maptype = 'terrain')
+ncmap <- ggmap(nc,  extent = "device")
+
+ncmap +
+  geom_polygon(aes(x = long, y = lat, group = group), data = data,
+               colour = 'grey', fill = 'red', alpha = .4, size = .1)
+

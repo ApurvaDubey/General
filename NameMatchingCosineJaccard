@@ -1,0 +1,107 @@
+
+###################################################
+# About: This is a generic code for performing name matches using Cosine similarity index
+# Date: 30 July 2015
+# Author: Apurva Dubey
+###################################################
+
+###################################################
+# CAUTION!
+# The result of algorithmic matching should be reviewed manually
+
+# The way I do the name matching exercises is:
+#	Step 1: run machine match i.e. this code
+#	Step 2: break out results of machine match into two categories “GOOD MATCHES” & “BAD MATCHES” 
+#		{this is done on the basis of similarity score returned by algorithm}. I sort by similarity and use my discretion to come up with a “cut-off” 
+#	Step 3: eye- ball the “GOOD MATCHES” to ensure there are no false positives 
+#	Step 4: perform a manual matches for “BAD MATCHES”
+
+
+# Also, it's highly recommended that you read about 'stringdist' packages
+# before start using this code: https://cran.r-project.org/web/packages/stringdist/stringdist.pdf
+
+###################################################
+
+# Regular Expression to remove all special chararecs
+# change everythign to the same case
+
+# clear up memory
+rm(list = ls(all = TRUE))
+
+# load libraries
+library(stringdist)
+library(sqldf)
+
+# load file to be matched
+ListA = read.csv('ListA.csv', stringsAsFactors=FALSE) 
+ListB = read.csv('ListB.csv', stringsAsFactors=FALSE)
+
+# look at the content of the file
+head(ListA)
+head(ListB)
+
+nrow(ListA)
+nrow(ListB)
+
+# perform a Cartesian product of the two files
+# this is needed so that all possible combinations can
+# be checked with each other
+data = sqldf("
+select * from ListA, ListB
+where 1 = 1")
+
+# QC: the number of records in the Cartesian product
+# should be equal to product of rows in the two files
+nrow(data)
+
+# define the keys on the basis of which match will be performed
+ListA_Key <- as.vector(as.matrix(data[,"KEY1"]))
+ListB_Key <- as.vector(as.matrix(data[,"KEY2"]))
+
+# QC: both lisst should have same length
+length(ListA_Key) 
+length(ListB_Key) 
+
+# string matching control information 
+M <- data.frame(
+    m = c("cosine"),  # other options can also be tried like Jaccard, Jaro-Winkler etc.
+    q = c(2),         # try 1 or 2 for ngrams, 2 gives pretty good results 
+    p = c(0)
+) 
+
+# perform name matching
+R <- apply(M, 1, 
+    function(x) stringdist(ListA_Key , ListB_Key , method=x["m"], q=x["q"], p=x["p"]))
+
+# QC: look at the content. The number of records should be same 
+# as the number of records in the Cartesian product
+head(R)
+nrow(R)
+
+head(data)
+
+# combine match results with the main data set
+result = (cbind(data,as.data.frame(R)))
+head(result)
+
+# write the final results
+write.csv(result, "result.csv", row.names=FALSE)
+
+# Important: what I am doing here is 
+# for each value in KEY1 finding the best match in KEY2
+# For cosine matches: 0 --> perfect match 1 --> no match...anything in between is "FUZZY"
+result_final = sqldf("
+select a.* from 
+result a, 
+(select KEY1, min(V1) as min_V1 from result 
+group by KEY1) b
+where a.KEY1= b.KEY1 and
+a.V1 = b.min_V1 
+"
+)
+
+# write the final results
+write.csv(result_final, "final_result.csv", row.names=FALSE)
+
+# END - you are done! Review the results now!
+

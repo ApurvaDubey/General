@@ -1,0 +1,126 @@
+print '''
+This is a bot for tic-tac-toe
+Player1: has to choose 'x'
+Player2: has to choose 'o'
+-------------------------------
+'''
+import copy
+
+# set some constants
+inf = 10**10 
+player1 = 'x'
+player2 = 'o'
+
+class board():
+
+    winConfigs = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],
+                    [1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+
+    def __init__(self,n=9):
+        self.posStates = ["_" for i in range(0,9)]
+
+    def boardUpdate(self,move,curPlayer):
+        self.posStates[move] = curPlayer
+
+    def availableMoves(self):
+        return [i for i,j in enumerate(self.posStates) if j in "_"]
+
+    def show(self):
+        print [self.posStates[i] for i in range(0,3)]
+        print [self.posStates[i] for i in range(3,6)]
+        print [self.posStates[i] for i in range(6,9)]
+        print "--------------------------"
+
+    def userInput(self,curPlayer):
+        inpt = None
+        print "Turn for player:", curPlayer
+        while inpt not in self.availableMoves():
+            inpt = int(raw_input("Enter your move, value between [0,8]:"))
+            
+        self.boardUpdate(int(inpt),curPlayer)
+        self.show()
+
+    def getSuccessors(self):
+
+        successors = {} # dictionary of move:result_state
+        for m in self.availableMoves():
+            tmp = copy.deepcopy(self.posStates)
+            tmp[m] = curPlayer
+
+            successors[m] = tmp
+
+        return successors
+
+    def gameOver(self):
+
+        status = False # game is not over
+
+        player1Config = [i for i,v in enumerate(self.posStates) if v == 'x']
+        player2Config = [i for i,v in enumerate(self.posStates) if v == 'o']
+
+        for w in self.winConfigs: # loop thru winning configs
+            cnt1 = 0
+            cnt2 = 0
+            for k in w:
+                if k in player1Config:
+                    cnt1 = cnt1 + 1
+                if k in player2Config:
+                    cnt2 = cnt2 + 1
+            if cnt1 == 3:
+                status = True # game over and 'x' won
+                utility = 1
+                print 'game over and player1(\'x\') has won'
+                break
+            if cnt2 == 3:
+                status = True # game over and 'o' won
+                utility = -1
+                print 'game over and player2(\'o\') has won'
+                break        
+
+        if status == False and sum([1 for i in self.posStates if i == '_']) == 0:
+            status = True # game over and tied
+            utility = 0
+            print 'game over and game has tied'
+
+        return [status, utility]
+
+def minMax(curPlayer,gameNode):
+
+    if curPlayer == player2:
+        return minMove_helper(gameNode)
+    else:
+        return maxMove_helper(gameNode)
+
+def minMove_helper(gameNode):
+
+    # if game is over then return terminal utility
+    candidateMoves = {}
+    
+    nextGameNodes = gameNode.getSuccessors()
+    for move, nextGameNode in nextGameNodes.items():
+        candidateMoves[move] = maxMove_helper(nextGameNode)
+
+    return findBestMove(candidateMoves)
+    
+
+if __name__=="__main__":
+
+    b = board()
+    b.show()
+
+    while b.gameOver()[0] == False:
+
+        # check whose chance it is
+        if b.posStates.count('x') - b.posStates.count('o') == 0:
+            curPlayer = player1
+        else:
+            curPlayer = player2
+
+        # take input from current player
+        if curPlayer == player1:
+            b.userInput(curPlayer)
+        else:
+            b.minMax(curPlayer)
+    
+
+

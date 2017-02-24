@@ -84,6 +84,34 @@ class board():
 
         return [status, utility]
 
+
+d = {1:10,2:5,3:20,4:-9}
+
+best = 1000
+for k,v in d.items():
+    print k,v
+    if v < best:
+        best = v
+
+print best
+
+def findBestMove(candidateMoves,flag):
+    if flag == "min":
+        bestUtility = +inf
+        for move,utility in candidateMoves.items():
+            if v < bestUtility:
+                bestUtility = utility
+                bestMove = move
+
+    if flag == "max":
+        bestUtility = -inf
+        for move,utility in candidateMoves.items():
+            if v > bestUtility:
+                bestUtility = utility
+                bestMove = move
+
+    return [bestMove,bestUtility]
+
 def minMax(curPlayer,gameNode):
 
     if curPlayer == player2:
@@ -100,7 +128,7 @@ def minMove_helper(gameNode):
     for move, nextGameNode in nextGameNodes.items():
         candidateMoves[move] = maxMove_helper(nextGameNode)
 
-    return findBestMove(candidateMoves)
+    return findBestMove(candidateMoves,'min')[0]
     
 
 if __name__=="__main__":
@@ -122,5 +150,3 @@ if __name__=="__main__":
         else:
             b.minMax(curPlayer)
     
-
-
